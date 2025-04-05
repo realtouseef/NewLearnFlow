@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BookOpen, Mail, Twitter, Instagram, Facebook, Youtube, GitHub } from "lucide-react";
+import { BookOpen, Mail, Twitter, Instagram, Facebook, Youtube, Github } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -37,7 +36,7 @@ const Footer = () => {
               </a>
               <a href="#" className="text-gray-400 hover:text-white">
                 <span className="sr-only">GitHub</span>
-                <GitHub className="h-6 w-6" />
+                <Github className="h-6 w-6" />
               </a>
             </div>
           </div>
