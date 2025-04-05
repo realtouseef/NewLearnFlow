@@ -1,0 +1,156 @@
+
+import { Note, Category, SubscriptionTier } from '@/types';
+
+export const categories: Category[] = [
+  {
+    id: '1',
+    name: 'Computer Science',
+    description: 'Programming, algorithms, data structures, and more',
+    iconName: 'Code',
+  },
+  {
+    id: '2',
+    name: 'Mathematics',
+    description: 'Calculus, algebra, statistics, and more',
+    iconName: 'PieChart',
+  },
+  {
+    id: '3',
+    name: 'Physics',
+    description: 'Mechanics, thermodynamics, electromagnetism, and more',
+    iconName: 'Atom',
+  },
+  {
+    id: '4',
+    name: 'Business',
+    description: 'Economics, management, finance, and more',
+    iconName: 'Briefcase',
+  },
+  {
+    id: '5',
+    name: 'Language Arts',
+    description: 'Literature, composition, rhetoric, and more',
+    iconName: 'BookOpen',
+  },
+  {
+    id: '6',
+    name: 'Social Sciences',
+    description: 'Psychology, sociology, anthropology, and more',
+    iconName: 'Users',
+  },
+];
+
+export const notes: Note[] = [
+  {
+    id: '1',
+    title: 'Introduction to Algorithms',
+    description: 'Comprehensive notes on basic algorithms and their time complexity analysis.',
+    subject: 'Computer Science',
+    fileUrl: '#',
+    previewUrl: '/placeholder.svg',
+    author: 'Alex Johnson',
+    uploadDate: '2024-03-15',
+    tier: SubscriptionTier.FREE,
+    downloads: 234,
+    rating: 4.5,
+    fileType: 'PDF'
+  },
+  {
+    id: '2',
+    title: 'Calculus II - Integration Techniques',
+    description: 'Detailed explanations of various integration methods with examples.',
+    subject: 'Mathematics',
+    fileUrl: '#',
+    previewUrl: '/placeholder.svg',
+    author: 'Maria Chen',
+    uploadDate: '2024-02-28',
+    tier: SubscriptionTier.FREE,
+    downloads: 156,
+    rating: 4.2,
+    fileType: 'PDF'
+  },
+  {
+    id: '3',
+    title: 'Object-Oriented Programming in Java',
+    description: 'Complete guide to OOP concepts with practical Java examples.',
+    subject: 'Computer Science',
+    fileUrl: '#',
+    previewUrl: '/placeholder.svg',
+    author: 'John Smith',
+    uploadDate: '2024-03-05',
+    tier: SubscriptionTier.PREMIUM,
+    downloads: 312,
+    rating: 4.8,
+    fileType: 'PDF'
+  },
+  {
+    id: '4',
+    title: 'Quantum Mechanics Fundamentals',
+    description: 'University-level notes covering quantum principles and applications.',
+    subject: 'Physics',
+    fileUrl: '#',
+    previewUrl: '/placeholder.svg',
+    author: 'Robert Zhang',
+    uploadDate: '2024-01-17',
+    tier: SubscriptionTier.PREMIUM,
+    downloads: 178,
+    rating: 4.6,
+    fileType: 'PDF'
+  },
+  {
+    id: '5',
+    title: 'Financial Accounting Essentials',
+    description: 'Comprehensive guide to financial statements and accounting principles.',
+    subject: 'Business',
+    fileUrl: '#',
+    previewUrl: '/placeholder.svg',
+    author: 'Sarah Williams',
+    uploadDate: '2024-02-10',
+    tier: SubscriptionTier.ELITE,
+    downloads: 267,
+    rating: 4.7,
+    fileType: 'PDF'
+  },
+  {
+    id: '6',
+    title: 'Advanced Data Structures',
+    description: 'In-depth exploration of complex data structures with implementation examples.',
+    subject: 'Computer Science',
+    fileUrl: '#',
+    previewUrl: '/placeholder.svg',
+    author: 'David Park',
+    uploadDate: '2024-03-22',
+    tier: SubscriptionTier.ELITE,
+    downloads: 195,
+    rating: 4.9,
+    fileType: 'PDF'
+  },
+  {
+    id: '7',
+    title: 'Organic Chemistry Reaction Mechanisms',
+    description: 'Visual guide to important organic chemistry reactions and mechanisms.',
+    subject: 'Chemistry',
+    fileUrl: '#',
+    previewUrl: '/placeholder.svg',
+    author: 'Emily Taylor',
+    uploadDate: '2024-02-05',
+    tier: SubscriptionTier.PREMIUM,
+    downloads: 221,
+    rating: 4.4,
+    fileType: 'PDF'
+  },
+  {
+    id: '8',
+    title: 'World History - 20th Century',
+    description: 'Detailed notes covering major historical events of the 20th century.',
+    subject: 'History',
+    fileUrl: '#',
+    previewUrl: '/placeholder.svg',
+    author: 'Michael Brown',
+    uploadDate: '2024-01-30',
+    tier: SubscriptionTier.FREE,
+    downloads: 142,
+    rating: 4.3,
+    fileType: 'PDF'
+  },
+];
