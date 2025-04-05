@@ -17,6 +17,7 @@ export type Note = {
   title: string;
   description: string;
   subject: string;
+  department: string;
   fileUrl: string;
   previewUrl?: string;
   author: string;
@@ -31,5 +32,21 @@ export type Category = {
   id: string;
   name: string;
   description: string;
+  iconName: string;
+};
+
+export type Department = {
+  id: string;
+  name: string;
+  description: string;
+  iconName: string;
+  subjects: Subject[];
+};
+
+export type Subject = {
+  id: string;
+  name: string;
+  description: string;
+  departmentId: string;
   iconName: string;
 };

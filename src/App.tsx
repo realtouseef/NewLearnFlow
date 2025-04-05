@@ -12,6 +12,9 @@ import Browse from "./pages/Browse";
 import Upload from "./pages/Upload";
 import Subscriptions from "./pages/Subscriptions";
 import NotFound from "./pages/NotFound";
+import Departments from "./pages/Departments";
+import DepartmentSubjects from "./pages/DepartmentSubjects";
+import SubjectNotes from "./pages/SubjectNotes";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +30,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/browse" element={<Browse />} />
+            <Route path="/departments" element={<Departments />} />
+            <Route path="/departments/:departmentId" element={<DepartmentSubjects />} />
+            <Route path="/departments/:departmentId/subjects/:subjectId" element={<SubjectNotes />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="*" element={<NotFound />} />
