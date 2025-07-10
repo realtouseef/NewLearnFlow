@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
@@ -13,14 +12,16 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { SubscriptionTier } from "@/types";
-import { categories } from "@/data/mockData";
+import { departments } from "@/data/mockData";
 import { Upload, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const UploadPage = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [subject, setSubject] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [semester, setSemester] = useState("");
+  const [subjectId, setSubjectId] = useState("");
   const [tier, setTier] = useState<SubscriptionTier>(SubscriptionTier.FREE);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<File | null>(null);
@@ -29,7 +30,208 @@ const UploadPage = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if not authenticated
+  // Generate semesters array (1-8)
+  const semesters = Array.from({ length: 8 }, (_, i) => ({
+    id: String(i + 1),
+    name: `Semester ${i + 1}`,
+  }));
+
+  // Generate subjects based on selected department and semester
+  const getSubjects = () => {
+    if (!departmentId || !semester) return [];
+    
+    // Define subjects for each semester (matching the curriculum structure)
+    const semesterSubjects: Record<number, Array<{id: string, name: string}>> = {
+      1: [
+        {
+          id: `${departmentId}-sem1-cs100`,
+          name: "CS 100 (3 cr.) – Introduction to Computing",
+        },
+        {
+          id: `${departmentId}-sem1-cs106`,
+          name: "CS 106 (4 cr.) – Introduction to Computer Programming",
+        },
+        {
+          id: `${departmentId}-sem1-mt112`,
+          name: "MT 112 – Calculus I",
+        },
+        {
+          id: `${departmentId}-sem1-ns111`,
+          name: "NS 111 (3 cr.) – Applied Physics",
+        },
+        {
+          id: `${departmentId}-sem1-ss104`,
+          name: "SS 104 – English I (Comprehension)",
+        },
+        {
+          id: `${departmentId}-sem1-ss108`,
+          name: "SS 108 – Islamic Studies",
+        },
+      ],
+      2: [
+        {
+          id: `${departmentId}-sem2-cs200`,
+          name: "CS 200 (4 cr.) – Object‑Oriented Programming",
+        },
+        {
+          id: `${departmentId}-sem2-ee200`,
+          name: "EE 200 (4 cr.) – Digital Logic Design",
+        },
+        {
+          id: `${departmentId}-sem2-mt114`,
+          name: "MT 114 – Calculus II",
+        },
+        {
+          id: `${departmentId}-sem2-ss118`,
+          name: "SS 118 – Pakistan Studies",
+        },
+        {
+          id: `${departmentId}-sem2-ss203`,
+          name: "SS 203 – English II",
+        },
+      ],
+      3: [
+        {
+          id: `${departmentId}-sem3-cs210`,
+          name: "CS 210 – Data Structures & Algorithms",
+        },
+        {
+          id: `${departmentId}-sem3-cs251`,
+          name: "CS 251 – Computer Organization & Assembly Language",
+        },
+        {
+          id: `${departmentId}-sem3-mt221`,
+          name: "MT 221 – Linear Algebra",
+        },
+        {
+          id: `${departmentId}-sem3-se242`,
+          name: "SE 242 – Software Engineering",
+        },
+        {
+          id: `${departmentId}-sem3-ss216`,
+          name: "SS 216 – Introduction to Sociology",
+        },
+      ],
+      4: [
+        {
+          id: `${departmentId}-sem4-cs213`,
+          name: "CS 213 – Database Management Systems",
+        },
+        {
+          id: `${departmentId}-sem4-cs221`,
+          name: "CS 221 – Web Programming Languages",
+        },
+        {
+          id: `${departmentId}-sem4-cs304`,
+          name: "CS 304 – Analysis of Algorithms",
+        },
+        {
+          id: `${departmentId}-sem4-mg100`,
+          name: "MG 100 – Fundamentals of Accounting",
+        },
+        {
+          id: `${departmentId}-sem4-ss218`,
+          name: "SS 218 – Introduction to Psychology",
+        },
+      ],
+      5: [
+        {
+          id: `${departmentId}-sem5-cs208`,
+          name: "CS 208 – Modern Programming Languages",
+        },
+        {
+          id: `${departmentId}-sem5-cs310`,
+          name: "CS 310 – Automata Theory",
+        },
+        {
+          id: `${departmentId}-sem5-cs313`,
+          name: "CS 313 – Operating System Concepts",
+        },
+        {
+          id: `${departmentId}-sem5-cs342`,
+          name: "CS 342 – Visual Programming",
+        },
+        {
+          id: `${departmentId}-sem5-mt201`,
+          name: "MT 201 – Discrete Structures",
+        },
+        {
+          id: `${departmentId}-sem5-ss401`,
+          name: "SS 401 – Research Methodology & Professional Ethics",
+        },
+      ],
+      6: [
+        {
+          id: `${departmentId}-sem6-cs306`,
+          name: "CS 306 (2 cr.) – Computer Networks",
+        },
+        {
+          id: `${departmentId}-sem6-cs307`,
+          name: "CS 307 (4 cr.) – Artificial Intelligence",
+        },
+        {
+          id: `${departmentId}-sem6-cs375`,
+          name: "CS 375 – Mobile Application Development",
+        },
+        {
+          id: `${departmentId}-sem6-mt301`,
+          name: "MT 301 – Probability & Statistics",
+        },
+        {
+          id: `${departmentId}-sem6-ss211`,
+          name: "SS 211 – English III (Technical Report Writing)",
+        },
+      ],
+      7: [
+        {
+          id: `${departmentId}-sem7-cs300`,
+          name: "CS 300 – Data Science",
+        },
+        {
+          id: `${departmentId}-sem7-cs401`,
+          name: "CS 401 – Compiler Construction",
+        },
+        {
+          id: `${departmentId}-sem7-cs422`,
+          name: "CS 422 – Distributed & Parallel Computing",
+        },
+        {
+          id: `${departmentId}-sem7-mt302`,
+          name: "MT 302 (3 cr.) – Numerical Computing",
+        },
+      ],
+      8: [
+        {
+          id: `${departmentId}-sem8-dip`,
+          name: "Digital Image Processing",
+        },
+        {
+          id: `${departmentId}-sem8-entrepreneurship`,
+          name: "Entrepreneurship",
+        },
+        {
+          id: `${departmentId}-sem8-infosec`,
+          name: "Information Security",
+        },
+      ],
+    };
+
+    const semesterNumber = parseInt(semester);
+    return semesterSubjects[semesterNumber] || [];
+  };
+
+  // Reset dependent fields when parent selection changes
+  const handleDepartmentChange = (value: string) => {
+    setDepartmentId(value);
+    setSemester("");
+    setSubjectId("");
+  };
+
+  const handleSemesterChange = (value: string) => {
+    setSemester(value);
+    setSubjectId("");
+  };
+
   React.useEffect(() => {
     if (!isAuthenticated) {
       toast({
@@ -98,10 +300,26 @@ const UploadPage = () => {
       });
       return false;
     }
-    if (!subject) {
+    if (!departmentId) {
+      toast({
+        title: "Missing department",
+        description: "Please select a department",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!semester) {
+      toast({
+        title: "Missing semester",
+        description: "Please select a semester",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!subjectId) {
       toast({
         title: "Missing subject",
-        description: "Please select a subject for your notes",
+        description: "Please select a subject",
         variant: "destructive",
       });
       return false;
@@ -136,7 +354,9 @@ const UploadPage = () => {
       // Reset form
       setTitle("");
       setDescription("");
-      setSubject("");
+      setDepartmentId("");
+      setSemester("");
+      setSubjectId("");
       setTier(SubscriptionTier.FREE);
       setFile(null);
       setPreview(null);
@@ -209,22 +429,65 @@ const UploadPage = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Select value={subject} onValueChange={setSubject} required>
+                <Label htmlFor="department">Department</Label>
+                <Select value={departmentId} onValueChange={handleDepartmentChange} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a subject" />
+                    <SelectValue placeholder="Select a department" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.name}>
-                        {category.name}
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="semester">Semester</Label>
+                <Select 
+                  value={semester} 
+                  onValueChange={handleSemesterChange}
+                  disabled={!departmentId}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a semester" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {semesters.map((sem) => (
+                      <SelectItem key={sem.id} value={sem.id}>
+                        {sem.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject</Label>
+                <Select 
+                  value={subjectId} 
+                  onValueChange={setSubjectId}
+                  disabled={!semester}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getSubjects().map((sub) => (
+                      <SelectItem key={sub.id} value={sub.id}>
+                        {sub.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               
               <div className="space-y-4">
                 <Label>Access Tier</Label>

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +10,10 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface NoteCardProps {
   note: Note;
+  onDownload?: () => void;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
+const NoteCard: React.FC<NoteCardProps> = ({ note, onDownload }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -67,10 +67,15 @@ const NoteCard: React.FC<NoteCardProps> = ({ note }) => {
       return;
     }
 
-    toast({
-      title: "Download Started",
-      description: "Your note is now downloading.",
-    });
+    // Call the onDownload callback if provided
+    if (onDownload) {
+      onDownload();
+    } else {
+      toast({
+        title: "Download Started",
+        description: "Your note is now downloading.",
+      });
+    }
   };
 
   return (

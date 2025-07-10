@@ -1,76 +1,172 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { Button } from "@/components/ui/button";
 import NoteCard from "@/components/ui/note-card";
 import { departments, notes } from "@/data/mockData";
-import { ChevronLeft, FileUp, Download, Book } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SubscriptionTier } from "@/types";
+import { ChevronLeft, FileUp, Book } from "lucide-react";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import UploadNotesForm from "@/components/ui/upload-notes-form";
+import { Note, SubscriptionTier } from "@/types";
 
 const SubjectNotes = () => {
   const { departmentId, subjectId } = useParams<{ departmentId: string, subjectId: string }>();
   const { toast } = useToast();
-  const [file, setFile] = useState<File | null>(null);
   
+  // Find department and subject info
   const department = departments.find(d => d.id === departmentId);
-  const subject = department?.subjects.find(s => s.id === subjectId);
+  const [subjectName, setSubjectName] = useState<string>("");
   
-  const subjectNotes = notes.filter(note => 
-    note.subject === subject?.name && 
-    note.department === department?.name
-  );
+  const [localNotes, setLocalNotes] = useState<Note[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  // Get subject name from semester subjects data
+  useEffect(() => {
+    if (subjectId && departmentId) {
+      // Extract subject name from the subject ID
+      const subjectParts = subjectId.split('-');
+      if (subjectParts.length >= 3) {
+        const semesterNum = subjectParts[1].replace('sem', '');
+        const courseCode = subjectParts[2];
+        
+        // Get the actual subject name from the semester subjects component data
+        const getSubjectName = () => {
+          const semesterSubjects = {
+            1: [
+              { id: 'cs100', name: 'CS 100 (3 cr.) – Introduction to Computing' },
+              { id: 'cs106', name: 'CS 106 (4 cr.) – Introduction to Computer Programming' },
+              { id: 'mt112', name: 'MT 112 – Calculus I' },
+              { id: 'ns111', name: 'NS 111 (3 cr.) – Applied Physics' },
+              { id: 'ss104', name: 'SS 104 – English I (Comprehension)' },
+              { id: 'ss108', name: 'SS 108 – Islamic Studies' }
+            ],
+            2: [
+              { id: 'cs200', name: 'CS 200 (4 cr.) – Object‑Oriented Programming' },
+              { id: 'ee200', name: 'EE 200 (4 cr.) – Digital Logic Design' },
+              { id: 'mt114', name: 'MT 114 – Calculus II' },
+              { id: 'ss118', name: 'SS 118 – Pakistan Studies' },
+              { id: 'ss203', name: 'SS 203 – English II' }
+            ],
+            3: [
+              { id: 'cs210', name: 'CS 210 – Data Structures & Algorithms' },
+              { id: 'cs251', name: 'CS 251 – Computer Organization & Assembly Language' },
+              { id: 'mt221', name: 'MT 221 – Linear Algebra' },
+              { id: 'se242', name: 'SE 242 – Software Engineering' },
+              { id: 'ss216', name: 'SS 216 – Introduction to Sociology' }
+            ],
+            4: [
+              { id: 'cs213', name: 'CS 213 – Database Management Systems' },
+              { id: 'cs221', name: 'CS 221 – Web Programming Languages' },
+              { id: 'cs304', name: 'CS 304 – Analysis of Algorithms' },
+              { id: 'mg100', name: 'MG 100 – Fundamentals of Accounting' },
+              { id: 'ss218', name: 'SS 218 – Introduction to Psychology' }
+            ],
+            5: [
+              { id: 'cs208', name: 'CS 208 – Modern Programming Languages' },
+              { id: 'cs310', name: 'CS 310 – Automata Theory' },
+              { id: 'cs313', name: 'CS 313 – Operating System Concepts' },
+              { id: 'cs342', name: 'CS 342 – Visual Programming' },
+              { id: 'mt201', name: 'MT 201 – Discrete Structures' },
+              { id: 'ss401', name: 'SS 401 – Research Methodology & Professional Ethics' }
+            ],
+            6: [
+              { id: 'cs306', name: 'CS 306 (2 cr.) – Computer Networks' },
+              { id: 'cs307', name: 'CS 307 (4 cr.) – Artificial Intelligence' },
+              { id: 'cs375', name: 'CS 375 – Mobile Application Development' },
+              { id: 'mt301', name: 'MT 301 – Probability & Statistics' },
+              { id: 'ss211', name: 'SS 211 – English III (Technical Report Writing)' }
+            ],
+            7: [
+              { id: 'cs300', name: 'CS 300 – Data Science' },
+              { id: 'cs401', name: 'CS 401 – Compiler Construction' },
+              { id: 'cs422', name: 'CS 422 – Distributed & Parallel Computing' },
+              { id: 'mt302', name: 'MT 302 (3 cr.) – Numerical Computing' }
+            ],
+            8: [
+              { id: 'dip', name: 'Digital Image Processing' },
+              { id: 'entrepreneurship', name: 'Entrepreneurship' },
+              { id: 'infosec', name: 'Information Security' }
+            ]
+          };
+          
+          const semesterData = semesterSubjects[parseInt(semesterNum) as keyof typeof semesterSubjects];
+          const subject = semesterData?.find(s => s.id === courseCode);
+          return subject?.name || `Subject ${courseCode}`;
+        };
+        
+        setSubjectName(getSubjectName());
+      }
     }
-  };
+  }, [subjectId, departmentId]);
 
-  const handleUpload = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!file) {
-      toast({
-        title: "File required",
-        description: "Please select a file to upload",
-        variant: "destructive"
-      });
-      return;
+  // Initialize notes from localStorage and mock data
+  useEffect(() => {
+    if (departmentId && subjectId) {
+      const storedNotes = localStorage.getItem(`notes-${departmentId}-${subjectId}`);
+      const filteredMockNotes = notes.filter(note => 
+        note.subject === subjectName && note.department === department?.name
+      );
+      
+      if (storedNotes) {
+        try {
+          const parsedNotes = JSON.parse(storedNotes);
+          setLocalNotes([...filteredMockNotes, ...parsedNotes]);
+        } catch (e) {
+          console.error('Error parsing stored notes:', e);
+          setLocalNotes(filteredMockNotes);
+        }
+      } else {
+        setLocalNotes(filteredMockNotes);
+      }
     }
+  }, [departmentId, subjectId, subjectName, department?.name]);
+
+  const handleUploadSuccess = (uploadedNote: Note) => {
+    const updatedNotes = [...localNotes, uploadedNote];
+    setLocalNotes(updatedNotes);
     
-    // Simulation of file upload
+    // Store only user-uploaded notes in localStorage
+    const userNotes = updatedNotes.filter(note => 
+      !notes.some(mockNote => mockNote.id === note.id)
+    );
+    localStorage.setItem(`notes-${departmentId}-${subjectId}`, JSON.stringify(userNotes));
+    
+    setIsDialogOpen(false);
     toast({
       title: "Upload successful!",
-      description: `Your note "${file.name}" has been uploaded.`,
+      description: `"${uploadedNote.title}" has been uploaded and is now available.`,
     });
-    
-    setFile(null);
-    const form = e.target as HTMLFormElement;
-    form.reset();
   };
 
-  const handleDownload = (noteTitle: string) => {
+  const handleDownload = (noteTitle: string, noteId: string) => {
+    // Update download count
+    const updatedNotes = localNotes.map(note => 
+      note.id === noteId ? { ...note, downloads: note.downloads + 1 } : note
+    );
+    setLocalNotes(updatedNotes);
+    
+    // Update localStorage
+    const userNotes = updatedNotes.filter(note => 
+      !notes.some(mockNote => mockNote.id === note.id)
+    );
+    localStorage.setItem(`notes-${departmentId}-${subjectId}`, JSON.stringify(userNotes));
+    
     toast({
       title: "Download started",
       description: `"${noteTitle}" is being downloaded.`,
     });
   };
   
-  if (!department || !subject) {
+  if (!department) {
     return (
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <div className="flex-grow container mx-auto px-4 py-16 text-center">
-          <h1 className="text-3xl font-bold mb-4">Subject Not Found</h1>
-          <p className="mb-8">The subject you're looking for does not exist.</p>
+          <h1 className="text-3xl font-bold mb-4">Department Not Found</h1>
+          <p className="mb-8">The department you're looking for does not exist.</p>
           <Button asChild>
             <Link to="/departments">Back to Departments</Link>
           </Button>
@@ -98,131 +194,38 @@ const SubjectNotes = () => {
             <Book className="h-8 w-8 text-learnflow-primary" />
           </div>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-learnflow-accent bg-clip-text text-transparent">
-            {subject.name}
+            {subjectName}
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-6">
-            {subject.description}
+            Browse and download study notes for this subject
           </p>
           
-          <div className="flex flex-wrap justify-center gap-4 mb-10">
-            <Dialog>
+          <div className="flex justify-center mb-10">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center bg-learnflow-primary hover:bg-learnflow-primary/90">
-                  <FileUp className="mr-2 h-4 w-4" />
+                <Button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-md flex items-center">
+                  <FileUp className="mr-2 h-5 w-5" />
                   Upload Notes
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[525px]">
-                <DialogHeader>
-                  <DialogTitle>Upload New Notes</DialogTitle>
-                  <DialogDescription>
-                    Share your knowledge with others by uploading your notes.
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleUpload} className="space-y-4 pt-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="title">Title</Label>
-                    <Input id="title" placeholder="Enter a descriptive title" required />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea 
-                      id="description" 
-                      placeholder="Briefly describe what these notes cover..." 
-                      className="min-h-[80px]"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="tier">Subscription Tier</Label>
-                    <Select defaultValue={SubscriptionTier.FREE} required>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select tier" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={SubscriptionTier.FREE}>Free</SelectItem>
-                        <SelectItem value={SubscriptionTier.PREMIUM}>Premium</SelectItem>
-                        <SelectItem value={SubscriptionTier.ELITE}>Elite</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <Label htmlFor="file">File</Label>
-                    <div className="border-2 border-dashed rounded-md p-6 text-center bg-gray-50 dark:bg-gray-800/50">
-                      {file ? (
-                        <div className="text-sm">
-                          <p className="font-medium">{file.name}</p>
-                          <p className="text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm" 
-                            className="mt-2"
-                            onClick={() => setFile(null)}
-                          >
-                            Change
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center justify-center mb-3">
-                            <FileUp className="h-10 w-10 text-gray-400" />
-                          </div>
-                          <div className="text-sm text-gray-500 mb-3">
-                            <p className="font-medium">Drag and drop or click to upload</p>
-                            <p>Supports PDF, DOCX, PPTX (max. 20MB)</p>
-                          </div>
-                          <Input 
-                            id="file" 
-                            type="file" 
-                            className="hidden" 
-                            accept=".pdf,.docx,.pptx" 
-                            onChange={handleFileChange}
-                            required
-                          />
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            onClick={() => document.getElementById('file')?.click()}
-                          >
-                            Browse files
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end pt-4">
-                    <Button type="submit" className="bg-learnflow-primary hover:bg-learnflow-primary/90">
-                      Upload Notes
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
+              <UploadNotesForm 
+                subjectId={subjectId || ""}
+                departmentId={departmentId || ""}
+                subjectName={subjectName} 
+                departmentName={department.name}
+                onSuccess={handleUploadSuccess}
+              />
             </Dialog>
           </div>
         </div>
         
         <div className="tech-grid relative pb-16">
           <div className="absolute inset-0 tech-dots opacity-30 pointer-events-none"></div>
-          {subjectNotes.length > 0 ? (
+          {localNotes.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {subjectNotes.map((note) => (
+              {localNotes.map((note) => (
                 <div key={note.id} className="relative group">
-                  <NoteCard note={note} />
-                  <div className="absolute inset-x-0 bottom-0 p-4 flex justify-center space-x-2 bg-gradient-to-t from-white dark:from-gray-800 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button 
-                      size="sm" 
-                      className="flex items-center bg-learnflow-primary hover:bg-learnflow-primary/90"
-                      onClick={() => handleDownload(note.title)}
-                    >
-                      <Download className="mr-1 h-4 w-4" />
-                      Download
-                    </Button>
-                  </div>
+                  <NoteCard note={note} onDownload={() => handleDownload(note.title, note.id)} />
                 </div>
               ))}
             </div>
@@ -233,14 +236,18 @@ const SubjectNotes = () => {
               <p className="text-gray-500 dark:text-gray-400 mb-6">Be the first to upload notes for this subject!</p>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="flex items-center bg-learnflow-primary hover:bg-learnflow-primary/90">
-                    <FileUp className="mr-2 h-4 w-4" />
+                  <Button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2 rounded-md flex items-center">
+                    <FileUp className="mr-2 h-5 w-5" />
                     Upload Notes
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
-                  {/* Same content as above */}
-                </DialogContent>
+                <UploadNotesForm 
+                  subjectId={subjectId || ""}
+                  departmentId={departmentId || ""}
+                  subjectName={subjectName} 
+                  departmentName={department.name}
+                  onSuccess={handleUploadSuccess}
+                />
               </Dialog>
             </div>
           )}

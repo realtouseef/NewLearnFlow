@@ -15,6 +15,11 @@ import NotFound from "./pages/NotFound";
 import Departments from "./pages/Departments";
 import DepartmentSubjects from "./pages/DepartmentSubjects";
 import SubjectNotes from "./pages/SubjectNotes";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +40,12 @@ const App = () => (
             <Route path="/departments/:departmentId/subjects/:subjectId" element={<SubjectNotes />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

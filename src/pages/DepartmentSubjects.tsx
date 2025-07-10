@@ -1,19 +1,31 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
-import SubjectGrid from "@/components/ui/subject-grid";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { departments } from "@/data/mockData";
 import { ChevronLeft, Layers } from "lucide-react";
+import SemesterSubjects from "@/components/ui/semester-subjects";
 
 const DepartmentSubjects = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
+  const [localDepartment, setLocalDepartment] = useState(
+    departments.find(d => d.id === departmentId)
+  );
   
-  const department = departments.find(d => d.id === departmentId);
+  useEffect(() => {
+    setLocalDepartment(departments.find(d => d.id === departmentId));
+  }, [departmentId]);
+
+  const semesters = Array.from({ length: 8 }, (_, i) => i + 1);
   
-  if (!department) {
+  if (!localDepartment) {
     return (
       <div className="flex flex-col min-h-screen">
         <Navbar />
@@ -47,16 +59,35 @@ const DepartmentSubjects = () => {
             <Layers className="h-8 w-8 text-learnflow-primary" />
           </div>
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-learnflow-accent bg-clip-text text-transparent">
-            {department.name}
+            {localDepartment.name}
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            {department.description}
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
+            {localDepartment.description}
           </p>
         </div>
-        
-        <div className="tech-grid relative pb-16">
-          <div className="absolute inset-0 tech-dots opacity-30 pointer-events-none"></div>
-          <SubjectGrid subjects={department.subjects} departmentId={departmentId || ''} />
+
+        <div className="max-w-4xl mx-auto">
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            {semesters.map((semester) => (
+              <AccordionItem
+                key={semester}
+                value={`semester-${semester}`}
+                className="border rounded-lg bg-white dark:bg-gray-800 shadow-sm"
+              >
+                <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                  <span className="text-xl font-semibold">
+                    Semester {semester}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pt-2 pb-4">
+                  <SemesterSubjects 
+                    semesterNumber={semester} 
+                    departmentId={departmentId || ''} 
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </div>
       <Footer />

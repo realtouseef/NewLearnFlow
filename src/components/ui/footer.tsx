@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -81,7 +80,7 @@ const Footer = () => {
                 </h3>
                 <ul className="mt-4 space-y-3">
                   <li>
-                    <Link to="/browse" className="text-base text-gray-300 hover:text-white flex items-center group">
+                    <Link to="/departments" className="text-base text-gray-300 hover:text-white flex items-center group">
                       <ChevronRight className="h-4 w-4 mr-1 text-gray-500 group-hover:text-learnflow-primary transition-colors" />
                       Browse Notes
                     </Link>
