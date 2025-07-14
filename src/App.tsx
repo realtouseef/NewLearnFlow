@@ -40,7 +40,6 @@ const App = () => (
             <Route path="/departments/:departmentId/subjects/:subjectId" element={<SubjectNotes />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
-            <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />

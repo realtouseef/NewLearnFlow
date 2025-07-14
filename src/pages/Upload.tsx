@@ -15,6 +15,8 @@ import { SubscriptionTier } from "@/types";
 import { departments } from "@/data/mockData";
 import { Upload, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useCreateNote } from "@/hooks/use-create-notes";
+import { useUploadFile } from "@/hooks/use-upload-file";
 
 const UploadPage = () => {
   const [title, setTitle] = useState("");
@@ -29,6 +31,9 @@ const UploadPage = () => {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  const uploadFileMutation = useUploadFile(); 
+  const createNoteMutation = useCreateNote();
 
   // Generate semesters array (1-8)
   const semesters = Array.from({ length: 8 }, (_, i) => ({
@@ -343,13 +348,43 @@ const UploadPage = () => {
     try {
       setIsUploading(true);
       
-      // Simulate upload delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      toast({
-        title: "Notes uploaded successfully",
-        description: "Your notes have been uploaded and are now available for others to view.",
-      });
+      const fileForm = new FormData();
+    fileForm.append("file", file!);
+    const fileRes = await uploadFileMutation.mutateAsync(fileForm);
+    const fileData = fileRes.data;
+
+    // 2. Upload preview (optional)
+    let previewUrl = "";
+    if (preview) {
+      const previewForm = new FormData();
+      previewForm.append("file", preview);
+      const previewRes = await uploadFileMutation.mutateAsync(previewForm);
+      previewUrl = previewRes.data.fileUrl;
+    }
+
+    // 3. Build and send note payload
+    const notePayload = {
+      title,
+      description,
+      fileUrl: fileData.fileUrl,
+      fileName: fileData.fileName,
+      fileType: fileData.fileType,
+      fileSize: fileData.fileSize,
+      previewUrl,
+      subject: subjectId,        // this must be ObjectId-compatible
+      department: departmentId,  // this must be ObjectId-compatible
+      author: 'ibrahim',          // make sure you pass this from auth
+      tier,                      // free, premium, elite
+    };
+
+
+    await createNoteMutation.mutateAsync(notePayload);
+
+    toast({
+      title: "Notes uploaded successfully",
+      description: "Your notes have been uploaded and are now available for others to view.",
+    });
+
       
       // Reset form
       setTitle("");

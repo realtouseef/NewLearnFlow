@@ -1,20 +1,36 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import NoteCard from "@/components/ui/note-card";
 import CategoryGrid from "@/components/ui/category-grid";
-import { categories, notes } from "@/data/mockData";
+import { categories } from "@/data/mockData";
 import { SubscriptionTier, Note } from "@/types";
 import { Filter, Search } from "lucide-react";
+import { fetchAllNotes } from "@/services/notes";
+import { useQuery } from "@tanstack/react-query";
 
 const Browse = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [activeTab, setActiveTab] = useState("all");
+
+  const {
+    data: notes = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["notes"],
+    queryFn: fetchAllNotes,
+  });
 
   const filterNotes = () => {
     let filteredNotes = [...notes];
@@ -34,7 +50,7 @@ const Browse = () => {
           note.title.toLowerCase().includes(term) ||
           note.description.toLowerCase().includes(term) ||
           note.subject.toLowerCase().includes(term) ||
-          note.author.toLowerCase().includes(term)
+          note.author?.toLowerCase().includes(term)
       );
     }
 
@@ -42,11 +58,13 @@ const Browse = () => {
     switch (sortBy) {
       case "newest":
         return filteredNotes.sort(
-          (a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()
+          (a, b) =>
+            new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()
         );
       case "oldest":
         return filteredNotes.sort(
-          (a, b) => new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime()
+          (a, b) =>
+            new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime()
         );
       case "popular":
         return filteredNotes.sort((a, b) => b.downloads - a.downloads);
@@ -122,16 +140,30 @@ const Browse = () => {
               <TabsList className="mb-6">
                 <TabsTrigger value="all">All Subjects</TabsTrigger>
                 {categories.map((category) => (
-                  <TabsTrigger key={category.id} value={category.name.toLowerCase()}>
+                  <TabsTrigger
+                    key={category.id}
+                    value={category.name.toLowerCase()}
+                  >
                     {category.name}
                   </TabsTrigger>
                 ))}
               </TabsList>
-
               <div className="space-y-10">
-                {Object.keys(groupedNotes).length === 0 ? (
+                {isLoading ? (
+                  <div className="text-center py-12 text-gray-500">
+                    Loading notes...
+                  </div>
+                ) : isError ? (
+                  <div className="text-center py-12 text-red-500">
+                    Failed to load notes. Please try again later.
+                  </div>
+                ) : Object.values(groupedNotes).every(
+                    (notes) => notes.length === 0
+                  ) ? (
                   <div className="text-center py-12">
-                    <p className="text-lg text-gray-500">No notes found matching your criteria.</p>
+                    <p className="text-lg text-gray-500">
+                      No notes found matching your criteria.
+                    </p>
                   </div>
                 ) : (
                   <>
@@ -152,9 +184,11 @@ const Browse = () => {
                           Premium Notes
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                          {groupedNotes[SubscriptionTier.PREMIUM].map((note) => (
-                            <NoteCard key={note.id} note={note} />
-                          ))}
+                          {groupedNotes[SubscriptionTier.PREMIUM].map(
+                            (note) => (
+                              <NoteCard key={note.id} note={note} />
+                            )
+                          )}
                         </div>
                       </div>
                     )}

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Download, Star, FileText, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import axios from "axios";
 
 interface NoteCardProps {
   note: Note;
@@ -46,37 +47,61 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onDownload }) => {
     }
   };
 
-  const handleDownload = () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to download this note.",
-        variant: "destructive",
-      });
-      navigate("/login");
-      return;
-    }
+  const handleDownload = async () => {
+  if (!user) {
+    toast({
+      title: "Authentication Required",
+      description: "Please log in to download this note.",
+      variant: "destructive",
+    });
+    navigate("/login");
+    return;
+  }
 
-    if (!isAccessible()) {
-      toast({
-        title: "Subscription Required",
-        description: `You need a ${note.tier} subscription to access this note.`,
-        variant: "destructive",
-      });
-      navigate("/subscriptions");
-      return;
-    }
+  if (!isAccessible()) {
+    toast({
+      title: "Subscription Required",
+      description: `You need a ${note.tier} subscription to access this note.`,
+      variant: "destructive",
+    });
+    navigate("/subscriptions");
+    return;
+  }
 
-    // Call the onDownload callback if provided
-    if (onDownload) {
-      onDownload();
-    } else {
-      toast({
-        title: "Download Started",
-        description: "Your note is now downloading.",
-      });
-    }
-  };
+  try {
+    const response = await axios.get(note.fileUrl, {
+      responseType: "blob", // Important for binary files
+    });
+
+    const blob = new Blob([response.data], { type: note.fileType });
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = note.title || "note.pdf";
+    document.body.appendChild(link);
+    link.click();
+
+    // Clean up
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+
+    toast({
+      title: "Download Started",
+      description: "Your note is downloading now.",
+    });
+
+    // Optional: Notify backend about the download (increment downloads)
+    // await axios.post(`/api/v1/notes/${note._id}/download`);
+  } catch (error) {
+    console.error("Download failed:", error);
+    toast({
+      title: "Download Failed",
+      description: "Could not download the note. Please try again later.",
+      variant: "destructive",
+    });
+  }
+};
 
   return (
     <Card className="note-card overflow-hidden h-full flex flex-col">

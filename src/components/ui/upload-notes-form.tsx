@@ -4,10 +4,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FileUp, Loader2 } from "lucide-react";
 import { SubscriptionTier, Note } from "@/types";
-import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useUploadFile } from "@/hooks/use-upload-file";
+import { useCreateNote } from "@/hooks/use-create-notes";
 
 interface UploadNotesFormProps {
   subjectId: string;
@@ -17,12 +30,12 @@ interface UploadNotesFormProps {
   onSuccess: (note: Note) => void;
 }
 
-const UploadNotesForm: React.FC<UploadNotesFormProps> = ({ 
+const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
   subjectId,
   departmentId,
-  subjectName, 
+  subjectName,
   departmentName,
-  onSuccess
+  onSuccess,
 }) => {
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -30,6 +43,8 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
   const [tier, setTier] = useState<SubscriptionTier>(SubscriptionTier.FREE);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const uploadFileMutation = useUploadFile();
+  const createNoteMutation = useCreateNote();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -39,12 +54,12 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!file) {
       toast({
         title: "File required",
         description: "Please select a file to upload",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -53,7 +68,7 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
       toast({
         title: "Title required",
         description: "Please enter a title for your notes",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -62,52 +77,54 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
       toast({
         title: "Description required",
         description: "Please enter a description for your notes",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     setUploading(true);
-    
+
     try {
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Create new note object
-      const newNote: Note = {
-        id: `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      const fileForm = new FormData();
+      fileForm.append("file", file!);
+      const fileRes = await uploadFileMutation.mutateAsync(fileForm);
+      const fileData = fileRes.data;
+
+      // Step 2: Prepare note metadata
+      const payload = {
         title: title.trim(),
         description: description.trim(),
-        subject: subjectName,
-        department: departmentName,
-        author: "Current User",
-        uploadDate: new Date().toISOString(),
-        downloads: 0,
-        rating: 0,
-        fileType: file.name.split('.').pop()?.toUpperCase() || "PDF",
-        tier: tier,
-        fileUrl: URL.createObjectURL(file), // Create temporary URL for demo
-        previewUrl: ""
+        subject: subjectId,
+        department: departmentId,
+        tier,
+        fileUrl: fileData.fileUrl,
+        previewUrl: fileData.previewUrl,
+        fileName: file.name,
+        fileType: file.name.split(".").pop()?.toUpperCase() || "PDF",
+        fileSize: file.size,
+        author: "Ibrahim",
       };
-      
+
+      const createdNote = await createNoteMutation.mutateAsync(payload);
+
       setUploading(false);
-      
+
       // Reset form
       setTitle("");
       setDescription("");
       setTier(SubscriptionTier.FREE);
       setFile(null);
-      
+
       // Call success callback with the new note
-      onSuccess(newNote);
-      
+      onSuccess(createdNote);
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
       setUploading(false);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your notes. Please try again.",
-        variant: "destructive"
+        description:
+          "There was an error uploading your notes. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -117,38 +134,39 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
       <DialogHeader>
         <DialogTitle>Upload New Notes</DialogTitle>
         <DialogDescription>
-          Share your knowledge with others by uploading your notes for {subjectName} in {departmentName}.
+          Share your knowledge with others by uploading your notes for{" "}
+          {subjectName} in {departmentName}.
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleUpload} className="space-y-4 pt-4">
         <div className="space-y-1">
           <Label htmlFor="title">Title</Label>
-          <Input 
-            id="title" 
-            placeholder="Enter a descriptive title" 
+          <Input
+            id="title"
+            placeholder="Enter a descriptive title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            required 
+            required
           />
         </div>
-        
+
         <div className="space-y-1">
           <Label htmlFor="description">Description</Label>
-          <Textarea 
-            id="description" 
-            placeholder="Briefly describe what these notes cover..." 
+          <Textarea
+            id="description"
+            placeholder="Briefly describe what these notes cover..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="min-h-[80px]"
             required
           />
         </div>
-        
+
         <div className="space-y-1">
           <Label htmlFor="tier">Subscription Tier</Label>
-          <Select 
-            value={tier} 
-            onValueChange={(value) => setTier(value as SubscriptionTier)} 
+          <Select
+            value={tier}
+            onValueChange={(value) => setTier(value as SubscriptionTier)}
             required
           >
             <SelectTrigger id="tier">
@@ -161,18 +179,20 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="space-y-1">
           <Label htmlFor="file">File</Label>
           <div className="border-2 border-dashed rounded-md p-6 text-center bg-gray-50 dark:bg-gray-800/50">
             {file ? (
               <div className="text-sm">
                 <p className="font-medium">{file.name}</p>
-                <p className="text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm" 
+                <p className="text-gray-500">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
                   className="mt-2"
                   onClick={() => setFile(null)}
                 >
@@ -185,21 +205,23 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
                   <FileUp className="h-10 w-10 text-gray-400" />
                 </div>
                 <div className="text-sm text-gray-500 mb-3">
-                  <p className="font-medium">Drag and drop or click to upload</p>
+                  <p className="font-medium">
+                    Drag and drop or click to upload
+                  </p>
                   <p>Supports PDF, DOCX, PPTX (max. 20MB)</p>
                 </div>
-                <Input 
-                  id="file" 
-                  type="file" 
-                  className="hidden" 
-                  accept=".pdf,.docx,.pptx" 
+                <Input
+                  id="file"
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.docx,.pptx"
                   onChange={handleFileChange}
                   required
                 />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => document.getElementById('file')?.click()}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById("file")?.click()}
                 >
                   Browse files
                 </Button>
@@ -207,10 +229,10 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
             )}
           </div>
         </div>
-        
+
         <div className="flex justify-end pt-4">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="bg-blue-500 hover:bg-blue-600 text-white"
             disabled={uploading}
           >
@@ -218,7 +240,9 @@ const UploadNotesForm: React.FC<UploadNotesFormProps> = ({
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...
               </>
-            ) : 'Upload Notes'}
+            ) : (
+              "Upload Notes"
+            )}
           </Button>
         </div>
       </form>
