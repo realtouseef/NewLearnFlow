@@ -1,155 +1,82 @@
+import axios from "axios";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, SubscriptionTier } from '@/types';
-import { useToast } from "@/components/ui/use-toast";
+const AuthContext = createContext(undefined);
 
-type AuthContextType = {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  upgradeSubscription: (tier: SubscriptionTier) => Promise<void>;
-};
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-const defaultAuthContext: AuthContextType = {
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  login: async () => {},
-  signup: async () => {},
-  logout: () => {},
-  upgradeSubscription: async () => {},
-};
+  const login = async (email, password) => {
+    const res = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/auth/login`,
+      {
+        email,
+        password,
+      }
+    );
 
-const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+    const { token, ...userData } = res.data.data;
 
-export const useAuth = () => useContext(AuthContext);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('learnflow-user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    try {
-      // For demo purposes, we're just simulating an API call
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate a successful login with a mock user
-      const mockUser: User = {
-        id: '1',
-        name: 'Demo User',
-        email: email,
-        subscription: SubscriptionTier.FREE
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('learnflow-user', JSON.stringify(mockUser));
-      toast({
-        title: "Success",
-        description: "You are now logged in.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to login. Please try again.",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
   };
 
-  const signup = async (name: string, email: string, password: string) => {
-    try {
-      // For demo purposes, we're just simulating an API call
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate a successful signup with a mock user
-      const mockUser: User = {
-        id: '1',
-        name: name,
-        email: email,
-        subscription: SubscriptionTier.FREE
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('learnflow-user', JSON.stringify(mockUser));
-      toast({
-        title: "Success",
-        description: "Your account has been created.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create account. Please try again.",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+  const signup = async (name, email, password) => {
+    const res = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/auth/register`,
+      {
+        name,
+        email,
+        password,
+      }
+    );
+
+    const { token, ...userData } = res.data.data;
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
   };
 
   const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
-    localStorage.removeItem('learnflow-user');
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully.",
-    });
   };
 
-  const upgradeSubscription = async (tier: SubscriptionTier) => {
-    try {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (user) {
-        const updatedUser = { ...user, subscription: tier };
-        setUser(updatedUser);
-        localStorage.setItem('learnflow-user', JSON.stringify(updatedUser));
-        
-        toast({
-          title: "Subscription Updated",
-          description: `You now have ${tier} access.`,
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token && !user) {
+      axios
+        .get(`${import.meta.env.VITE_BASE_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          setUser(res.data.data);
+        })
+        .catch(() => {
+          logout();
+        })
+        .finally(() => {
+          setLoading(false);
         });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upgrade subscription. Please try again.",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
+    } else {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    login,
-    signup,
-    logout,
-    upgradeSubscription,
-  };
+  const isAuthenticated = useMemo(() => !!user, [user]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, setUser, isAuthenticated, login, signup, logout, loading }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
+export const useAuth = () => useContext(AuthContext);

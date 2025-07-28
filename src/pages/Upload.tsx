@@ -373,8 +373,9 @@ const UploadPage = () => {
       previewUrl,
       subject: subjectId,        // this must be ObjectId-compatible
       department: departmentId,  // this must be ObjectId-compatible
-      author: 'ibrahim',          // make sure you pass this from auth
+      author: user.name,          // make sure you pass this from auth
       tier,                      // free, premium, elite
+      semester: semester,
     };
 
 

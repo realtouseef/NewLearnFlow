@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/ui/navbar";
 import Footer from "@/components/ui/footer";
 import { BookOpen } from "lucide-react";
+import { useSignup } from "@/hooks/use-auth";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -17,9 +17,9 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { signup } = useAuth();
+  const signupMutation = useSignup();
+
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -39,18 +39,22 @@ const Signup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
-    try {
-      setIsLoading(true);
-      await signup(name, email, password);
-      navigate("/");
-    } catch (error) {
-      console.error("Signup failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
+
+    signupMutation.mutate(
+      { name, email, password },
+      {
+        onSuccess: (data) => {
+          localStorage.setItem('token', data?.data?.token);
+          navigate('/');
+        },
+        onError: (error: unknown) => {
+          const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+          console.error('Sign Up failed:', errorMessage);
+        },
+      }
+    );
   };
 
   return (
@@ -145,9 +149,9 @@ const Signup = () => {
               <Button
                 type="submit"
                 className="w-full bg-learnflow-primary hover:bg-learnflow-primary/90"
-                disabled={isLoading}
+                disabled={signupMutation.isPending}
               >
-                {isLoading ? "Creating account..." : "Create account"}
+                {signupMutation.isPending ? "Creating account..." : "Create account"}
               </Button>
             </form>
           </CardContent>
